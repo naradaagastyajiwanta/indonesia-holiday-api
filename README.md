@@ -69,6 +69,23 @@ Extremely useful for rendering monthly calendar UIs. This endpoint automatically
 GET /api/2026/03
 ```
 
+### 4. Advanced Filters (Search, Date Range & CSV)
+You can append query strings to any of the endpoints above to narrow down your results or change the response format.
+
+* **Search by Name:**
+  ```http
+  GET /api/2026?search=cuti
+  GET /api?search=lebaran
+  ```
+* **Filter by Date Range:**
+  ```http
+  GET /api?start=2026-03-01&end=2026-04-30
+  ```
+* **Download as CSV (Excel Friendly):**
+  ```http
+  GET /api/2026?format=csv
+  ```
+
 ---
 
 ## 💻 Implementation Snippets
