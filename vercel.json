@@ -1,7 +1,15 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/api-docs(.*)",
+      "destination": "/api/index.ts"
+    },
+    {
+      "source": "/graphql(.*)",
       "destination": "/api/index.ts"
     }
   ]
