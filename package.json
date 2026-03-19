@@ -1,0 +1,22 @@
+{
+  "name": "api-hari-libur",
+  "version": "1.0.0",
+  "description": "API Hari Libur Nasional & Cuti Bersama Indonesia - Auto Sync dengan Google Calendar",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc"
+  },
+  "keywords": ["api", "indonesia", "libur", "holiday"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "hono": "^4.0.0",
+    "node-ical": "^0.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vercel": "^33.0.0"
+  }
+}
