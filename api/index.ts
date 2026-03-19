@@ -15,32 +15,64 @@ app.get("/", (req, res) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indonesia National Holiday API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #EF4444; --surface: #F9FAFB; --text-main: #111827; --text-muted: #6B7280; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--surface); color: var(--text-main); line-height: 1.6; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: white; max-width: 600px; padding: 3rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); text-align: center; border-top: 5px solid var(--primary); }
-        h1 { font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-main); }
-        p.subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 2rem; }
-        .endpoint-card { background-color: var(--surface); border: 1px solid #E5E7EB; border-radius: 0.5rem; padding: 1.5rem; text-align: left; margin-bottom: 1.5rem; }
-        .endpoint { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #E5E7EB; }
-        .endpoint:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .badge { background-color: #10B981; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; font-weight: bold; letter-spacing: 0.05em; }
-        a { color: #3B82F6; text-decoration: none; font-weight: 500; }
-        a:hover { text-decoration: underline; }
-        .footer { margin-top: 2rem; font-size: 0.9rem; color: var(--text-muted); }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #fafafa; color: #171717; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; line-height: 1.5; }
+        .container { max-width: 560px; width: 100%; background: #ffffff; padding: 48px; border-radius: 20px; border: 1px solid #eaeaea; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); }
+        h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; color: #111; display: flex; align-items: center; gap: 8px; }
+        p.description { color: #666; font-size: 15px; margin-bottom: 32px; }
+        .endpoints { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+        .endpoint { background: #fafafa; border: 1px solid #eaeaea; padding: 14px 16px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; }
+        .endpoint:hover { border-color: #d4d4d4; background: #fff; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .endpoint-left { display: flex; align-items: center; gap: 14px; }
+        .method { font-size: 11px; font-weight: 600; background: #111; color: #fff; padding: 4px 8px; border-radius: 6px; letter-spacing: 0.5px; }
+        .path { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; color: #111; text-decoration: none; font-weight: 500;}
+        .path:hover { text-decoration: underline; }
+        .desc { font-size: 13px; color: #888; }
+        .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 24px; border-top: 1px solid #eaeaea; font-size: 13px; }
+        .github-link { color: #111; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: opacity 0.2s; }
+        .github-link:hover { opacity: 0.6; }
+        .credit { color: #888; }
+        .credit span { color: #111; font-weight: 600; letter-spacing: -0.01em; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>🇮🇩 Indonesia Holiday API</h1>
-    <p class="subtitle">A free, fast, and auto-updating JSON API for Indonesian National & Joint Holidays.</p>
-    <div class="endpoint-card">
-        <div class="endpoint"><span class="badge">GET</span><span><a href="/api" target="_blank">/api</a></span></div>
-        <div class="endpoint"><span class="badge">GET</span><span><a href="/api/2026" target="_blank">/api/2026</a> (By Year)</span></div>
-        <div class="endpoint"><span class="badge">GET</span><span><a href="/api/2026/04" target="_blank">/api/2026/04</a> (By Month)</span></div>
+    <p class="description">A minimalistic, auto-updating JSON API for Indonesian National & Joint Holidays.</p>
+    
+    <div class="endpoints">
+        <div class="endpoint">
+            <div class="endpoint-left">
+                <span class="method">GET</span>
+                <a href="/api" target="_blank" class="path">/api</a>
+            </div>
+            <span class="desc">All Data</span>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-left">
+                <span class="method">GET</span>
+                <a href="/api/2026" target="_blank" class="path">/api/2026</a>
+            </div>
+            <span class="desc">By Year</span>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-left">
+                <span class="method">GET</span>
+                <a href="/api/2026/04" target="_blank" class="path">/api/2026/04</a>
+            </div>
+            <span class="desc">By Month</span>
+        </div>
     </div>
-    <p>Read the full documentation and usage examples on our GitHub repository.</p>
-    <div class="footer"><a href="https://github.com/naradaagastyajiwanta/indonesia-holiday-api" target="_blank">View Documentation on GitHub ↗</a></div>
+    
+    <div class="footer">
+        <a href="https://github.com/naradaagastyajiwanta/indonesia-holiday-api" target="_blank" class="github-link">
+            <svg height="16" aria-hidden="true" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" fill="currentColor"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg>
+            GitHub
+        </a>
+        <div class="credit">By <span>NAJ</span></div>
+    </div>
 </div>
 </body>
 </html>
