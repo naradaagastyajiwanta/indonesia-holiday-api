@@ -2,8 +2,19 @@ import express from "express";
 import cors from "cors";
 import ical from "ical";
 import https from "https";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 const app = express();
+
+app.set("trust proxy", 1);
+app.use(helmet({ contentSecurityPolicy: false })); // allow swagger inline scripts if needed
+
+const apiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { error: "Too many requests from this IP, please try again after 10 minutes" }
+});
 
 const swaggerDocument = {
   openapi: "3.0.0",
@@ -23,6 +34,34 @@ const swaggerDocument = {
     },
   ],
   paths: {
+    "/today": {
+      get: {
+        summary: "Get today's holiday",
+        description: "Returns today's holiday if any. Useful for bot/HRIS automation.",
+        parameters: [
+          { name: "lang", in: "query", description: "Bahasa response (en untuk Inggris)", required: false, schema: { type: "string", enum: ["id", "en"], default: "id" } },
+        ],
+        responses: {
+          "200": {
+            description: "Holiday object array (empty if not a holiday)"
+          }
+        }
+      }
+    },
+    "/next": {
+      get: {
+        summary: "Get next upcoming holiday",
+        description: "Returns the closest upcoming holiday relative to today.",
+        parameters: [
+          { name: "lang", in: "query", description: "Bahasa response (en untuk Inggris)", required: false, schema: { type: "string", enum: ["id", "en"], default: "id" } },
+        ],
+        responses: {
+          "200": {
+            description: "Holiday object array (1 item)"
+          }
+        }
+      }
+    },
     "/{year}": {
       get: {
         summary: "Get holidays for a specific year",
@@ -32,7 +71,8 @@ const swaggerDocument = {
           { name: "start", in: "query", description: "Mulai (Start) Range (YYYY-MM-DD)", required: false, schema: { type: "string", format: "date" } },
           { name: "end", in: "query", description: "Selesai (End) Range (YYYY-MM-DD)", required: false, schema: { type: "string", format: "date" } },
           { name: "search", in: "query", description: "Pencarian spesifik berdasarkan kata kunci", required: false, schema: { type: "string" } },
-          { name: "format", in: "query", description: "Format response (json atau csv)", required: false, schema: { type: "string", enum: ["json", "csv"], default: "json" } },
+          { name: "lang", in: "query", description: "Bahasa response (en untuk Inggris)", required: false, schema: { type: "string", enum: ["id", "en"], default: "id" } },
+          { name: "format", in: "query", description: "Format response (json, csv, atau ics)", required: false, schema: { type: "string", enum: ["json", "csv", "ics"], default: "json" } },
         ],
         responses: {
           "200": {
@@ -167,6 +207,34 @@ app.get("/", (req, res) => {
         </div>
         <div class="endpoint">
             <div class="endpoint-left">
+                <span class="method">GET</span>
+                <a href="/api/today" target="_blank" class="path">/api/today</a>
+            </div>
+            <span class="desc">Today's Holiday</span>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-left">
+                <span class="method">GET</span>
+                <a href="/api/next" target="_blank" class="path">/api/next</a>
+            </div>
+            <span class="desc">Upcoming Holiday</span>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-left">
+                <span class="method">GET</span>
+                <a href="/api/2026?lang=en" target="_blank" class="path">/?lang=en</a>
+            </div>
+            <span class="desc">English Translation</span>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-left">
+                <span class="method">GET</span>
+                <a href="/api/2026?format=ics" target="_blank" class="path">/?format=ics</a>
+            </div>
+            <span class="desc">iCal Export</span>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-left">
                 <span class="method" style="background:#49cc90;">UI</span>
                 <a href="/api-docs" class="path">/api-docs</a>
             </div>
@@ -276,13 +344,74 @@ async function getHolidays(): Promise<Holiday[]> {
   }
 }
 
-app.use("/api", (req, res, next) => {
+app.use("/api", apiLimiter, (req, res, next) => {
   res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate");
   next();
 });
 
+const enTranslationDict: Record<string, string> = {
+  "tahun baru masehi": "New Year's Day",
+  "tahun baru imlek": "Chinese New Year",
+  "hari suci nyepi": "Day of Silence (Nyepi)",
+  "jumat agung": "Good Friday",
+  "wafat yesus kristus": "Good Friday",
+  "wafat isa almasih": "Good Friday",
+  "hari raya idul fitri": "Eid al-Fitr",
+  "hari buruh internasional": "Labour Day",
+  "kenaikan yesus kristus": "Ascension Day of Jesus Christ",
+  "kenaikan isa almasih": "Ascension Day of Jesus Christ",
+  "hari raya waisak": "Waisak Day",
+  "hari lahir pancasila": "Pancasila Day",
+  "hari raya idul adha": "Eid al-Adha",
+  "tahun baru islam": "Islamic New Year",
+  "kemerdekaan ri": "Independence Day",
+  "kemerdekaan republik indonesia": "Independence Day",
+  "maulid nabi muhammad": "Prophet Muhammad's Birthday",
+  "hari raya natal": "Christmas Day",
+  "isra mikraj": "Isra Mi'raj",
+  "isra mi'raj": "Isra Mi'raj",
+  "pemungutan suara": "Election Day",
+};
+
+function translateHoliday(name: string): string {
+  const lowerName = name.toLowerCase();
+  for (const [key, value] of Object.entries(enTranslationDict)) {
+    if (lowerName.includes(key)) {
+      if (lowerName.includes("cuti bersama")) return `Joint Holiday of ${value}`;
+      return value;
+    }
+  }
+  if (lowerName.includes("cuti bersama")) return "Joint Holiday";
+  return name;
+}
+
+function buildICS(holidays: Holiday[]): string {
+  let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Indonesia Holiday API//ID\nCALSCALE:GREGORIAN\n";
+  for (const h of holidays) {
+      const dateClean = h.holiday_date.replace(/-/g, ""); 
+      const nextDay = new Date(h.holiday_date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const endClean = nextDay.toISOString().split("T")[0].replace(/-/g, "");
+      
+      ics += "BEGIN:VEVENT\n";
+      ics += `UID:${dateClean}-${Math.floor(Math.random()*10000)}@indonesia-holiday-api\n`;
+      ics += `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"}\n`;
+      ics += `DTSTART;VALUE=DATE:${dateClean}\n`;
+      ics += `DTEND;VALUE=DATE:${endClean}\n`;
+      ics += `SUMMARY:${h.holiday_name}\n`;
+      ics += "END:VEVENT\n";
+  }
+  ics += "END:VCALENDAR";
+  return ics;
+}
+
 function processHolidays(req: express.Request, res: express.Response, holidays: Holiday[]) {
   let result = holidays;
+  
+  // Apply translation if lang=en
+  if (req.query.lang === 'en') {
+    result = result.map(h => ({ ...h, holiday_name: translateHoliday(h.holiday_name) }));
+  }
   
   // 1. Filter by Date Range (start and end)
   if (req.query.start || req.query.end) {
@@ -297,7 +426,7 @@ function processHolidays(req: express.Request, res: express.Response, holidays: 
     result = result.filter(h => h.holiday_name.toLowerCase().includes(keyword));
   }
 
-  // 3. Format as CSV if requested
+  // 3. Format as CSV or ICS if requested
   if (req.query.format === 'csv') {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="holidays.csv"');
@@ -307,9 +436,42 @@ function processHolidays(req: express.Request, res: express.Response, holidays: 
     );
     return res.send([header, ...rows].join('\n'));
   }
+  
+  if (req.query.format === 'ics') {
+    res.setHeader('Content-Type', 'text/calendar');
+    res.setHeader('Content-Disposition', 'attachment; filename="holidays.ics"');
+    return res.send(buildICS(result));
+  }
 
   return res.json(result);
 }
+
+// -------------------------------------------------------------
+// ROUTES
+// -------------------------------------------------------------
+
+app.get("/api/today", async (req, res) => {
+  try {
+    const holidays = await getHolidays();
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })).toISOString().split("T")[0];
+    const todayHolidays = holidays.filter(h => h.holiday_date === today);
+    processHolidays(req, res, todayHolidays);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch holidays" });
+  }
+});
+
+app.get("/api/next", async (req, res) => {
+  try {
+    const holidays = await getHolidays();
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })).toISOString().split("T")[0];
+    const nextHolidays = holidays.filter(h => h.holiday_date >= today);
+    const result = nextHolidays.length > 0 ? [nextHolidays[0]] : [];
+    processHolidays(req, res, result);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch holidays" });
+  }
+});
 
 app.get("/api", async (req, res) => {
   try {

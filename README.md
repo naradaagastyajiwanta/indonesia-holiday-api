@@ -72,7 +72,7 @@ Extremely useful for rendering monthly calendar UIs. This endpoint automatically
 GET /api/2026/03
 ```
 
-### 4. Advanced Filters (Search, Date Range & CSV)
+### 4. Smart Automation Endpoints`nPerfect for Telegram/Discord Bots, HRIS apps, or Daily chron jobs.`n* **Get Today's Holiday:**`n  ```http`n  GET /api/today`n  ````n* **Get Next Upcoming Holiday:**`n  ```http`n  GET /api/next`n  ````n`n### 5. Advanced Filters (Language, Date Range & CSV)
 You can append query strings to any of the endpoints above to narrow down your results or change the response format.
 
 * **Search by Name:**
@@ -84,7 +84,7 @@ You can append query strings to any of the endpoints above to narrow down your r
   ```http
   GET /api?start=2026-03-01&end=2026-04-30
   ```
-* **Download as CSV (Excel Friendly):**
+* * **Translate to English:**`n  ```http`n  GET /api/2026/05?lang=en`n  ````n* **Add to Calendar (.ics):**`n  ```http`n  GET /api/2026?format=ics`n  ````n* **Download as CSV (Excel Friendly):**
   ```http
   GET /api/2026?format=csv
   ```
