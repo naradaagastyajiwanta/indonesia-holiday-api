@@ -4,8 +4,7 @@
   "description": "API Hari Libur Nasional & Cuti Bersama Indonesia - Auto Sync dengan Google Calendar",
   "main": "api/index.js",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "tsc"
+    "dev": "vercel dev"
   },
   "keywords": ["api", "indonesia", "libur", "holiday"],
   "author": "",
