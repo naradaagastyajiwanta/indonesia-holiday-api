@@ -1,6 +1,6 @@
 {
   "name": "indonesia-holiday-id",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The official Node.js SDK for Indonesia Holiday API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,13 @@
     "build": "tsc",
     "prepare": "npm run build"
   },
-  "keywords": ["indonesia", "holiday", "api", "tanggal-merah", "sdk"],
+  "keywords": [
+    "indonesia",
+    "holiday",
+    "api",
+    "tanggal-merah",
+    "sdk"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -17,5 +23,9 @@
   "devDependencies": {
     "@types/node": "^20.12.0",
     "typescript": "^5.4.3"
+  },
+  "peerDependencies": {
+    "@types/react": "^19.2.14",
+    "react": "^19.2.4"
   }
 }

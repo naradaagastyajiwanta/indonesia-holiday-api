@@ -23,7 +23,9 @@
     "graphql": "^16.13.1",
     "graphql-yoga": "^5.18.1",
     "helmet": "^8.1.0",
-    "ical": "^0.8.0"
+    "ical": "^0.8.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -32,6 +34,8 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^25.5.0",
     "@types/supertest": "^7.2.0",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "jest": "^30.3.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",

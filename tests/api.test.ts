@@ -32,4 +32,17 @@ describe("Indonesia Holiday API", () => {
         expect(resEn.status).toBe(200);
         expect(res.body.length).toEqual(resEn.body.length);
     });
+
+    it("GET /api/info should return info from Wikipedia", async () => {
+        const res = await request(app).get("/api/info");
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty("info");
+        expect(typeof res.body.info).toBe("string");
+    });
+
+    it("GET /api/og should return an SVG image", async () => {
+        const res = await request(app).get("/api/og");
+        expect(res.status).toBe(200);
+        expect(res.headers["content-type"]).toContain("image/svg+xml");
+    });
 });
