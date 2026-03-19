@@ -4,6 +4,8 @@ import ical from "ical";
 import https from "https";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { createSchema, createYoga } from "graphql-yoga";
+import { Redis } from "@upstash/redis";
 
 const app = express();
 
@@ -265,10 +267,19 @@ export interface Holiday {
   is_joint_holiday: boolean;
 }
 
-// In-memory cache
+// In-memory cache fallback
 let cachedHolidays: Holiday[] | null = null;
 let lastFetchTime = 0;
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+// Edge Redis Cache
+let redis: Redis | null = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+}
 
 async function fetchFromGoogleCalendar(): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -285,8 +296,18 @@ async function fetchFromGoogleCalendar(): Promise<string> {
 
 async function getHolidays(): Promise<Holiday[]> {
   const now = Date.now();
-  if (cachedHolidays && (now - lastFetchTime < CACHE_TTL)) {
-    return cachedHolidays;
+  
+  if (redis) {
+    try {
+      const edgeCache = await redis.get<Holiday[]>("holidays_data");
+      if (edgeCache) return edgeCache;
+    } catch (e) {
+      console.error("Redis Cache Error:", e);
+    }
+  } else {
+    if (cachedHolidays && (now - lastFetchTime < CACHE_TTL)) {
+      return cachedHolidays;
+    }
   }
 
   try {
@@ -333,11 +354,22 @@ async function getHolidays(): Promise<Holiday[]> {
       a.holiday_date.localeCompare(b.holiday_date)
     );
 
-    cachedHolidays = holidays;
-    lastFetchTime = now;
+    if (redis) {
+      // 24 hours caching in Redis
+      await redis.set("holidays_data", holidays, { ex: 86400 }).catch(e => console.error(e));
+    } else {
+      cachedHolidays = holidays;
+      lastFetchTime = now;
+    }
+    
     return holidays;
   } catch (error) {
-    if (cachedHolidays) {
+    if (redis) {
+      try {
+        const stale = await redis.get<Holiday[]>("holidays_data");
+        if (stale) return stale;
+      } catch (e) { }
+    } else if (cachedHolidays) {
       return cachedHolidays; // Return stale cache if error occurs
     }
     throw error;
@@ -504,5 +536,64 @@ app.get("/api/:year/:month", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch holidays" });
   }
 });
+
+// -------------------------------------------------------------
+// GRAPHQL ENDPOINT
+// -------------------------------------------------------------
+const yoga = createYoga({
+  graphqlEndpoint: '/graphql',
+  schema: createSchema({
+    typeDefs: `
+      type Holiday {
+        holiday_date: String!
+        holiday_name: String!
+        is_national_holiday: Boolean!
+        is_joint_holiday: Boolean!
+      }
+      type Query {
+        holidays(year: Int, month: String, search: String, lang: String): [Holiday!]!
+        today(lang: String): [Holiday!]!
+        next(lang: String): [Holiday!]!
+      }
+    `,
+    resolvers: {
+      Query: {
+        holidays: async (_, args) => {
+          let hols = await getHolidays();
+          if (args.year) hols = hols.filter(h => h.holiday_date.startsWith(args.year.toString()));
+          if (args.month) hols = hols.filter(h => h.holiday_date.substring(5, 7) === args.month.padStart(2, '0'));
+          if (args.search) {
+            const kw = args.search.toLowerCase();
+            hols = hols.filter(h => h.holiday_name.toLowerCase().includes(kw));
+          }
+          if (args.lang === 'en') {
+            hols = hols.map(h => ({ ...h, holiday_name: translateHoliday(h.holiday_name) }));
+          }
+          return hols;
+        },
+        today: async (_, args) => {
+          let hols = await getHolidays();
+          const t = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })).toISOString().split("T")[0];
+          hols = hols.filter(h => h.holiday_date === t);
+          if (args.lang === 'en') {
+            hols = hols.map(h => ({ ...h, holiday_name: translateHoliday(h.holiday_name) }));
+          }
+          return hols;
+        },
+        next: async (_, args) => {
+          let hols = await getHolidays();
+          const t = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })).toISOString().split("T")[0];
+          hols = hols.filter(h => h.holiday_date >= t);
+          let res = hols.length > 0 ? [hols[0]] : [];
+          if (args.lang === 'en') {
+            res = res.map(h => ({ ...h, holiday_name: translateHoliday(h.holiday_name) }));
+          }
+          return res;
+        }
+      }
+    }
+  })
+});
+app.use('/graphql', yoga);
 
 export default app;

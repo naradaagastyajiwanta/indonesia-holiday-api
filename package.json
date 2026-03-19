@@ -4,7 +4,8 @@
   "description": "API Hari Libur Nasional & Cuti Bersama Indonesia - Auto Sync dengan Google Calendar",
   "main": "api/index.js",
   "scripts": {
-    "dev": "vercel dev", "test": "jest"
+    "dev": "vercel dev",
+    "test": "jest"
   },
   "keywords": [
     "api",
@@ -15,9 +16,12 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@upstash/redis": "^1.37.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
+    "graphql": "^16.13.1",
+    "graphql-yoga": "^5.18.1",
     "helmet": "^8.1.0",
     "ical": "^0.8.0"
   },
