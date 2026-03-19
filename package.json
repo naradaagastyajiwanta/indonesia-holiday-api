@@ -35,7 +35,6 @@
     "jest": "^30.3.0",
     "supertest": "^7.2.2",
     "ts-jest": "^29.4.6",
-    "typescript": "^5.0.0",
-    "vercel": "^33.0.0"
+    "typescript": "^5.0.0"
   }
 }
