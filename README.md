@@ -78,6 +78,92 @@ You can chain multiple query parameters to format the response exactly to your l
 
 ---
 
+## 💎 Enterprise & Advanced Features
+
+This API comes packed with advanced tooling designed for bots, CI/CD operations, and modern frontend ecosystems.
+
+### 1. 🖼️ Dynamic Open Graph (SVG) Generator
+Dynamically generate beautiful SVG images on the fly depending on today's holiday context. Useful for Slack, Discord, Twitter, or WhatsApp rich link previews.
+* **Endpoint:** `GET /api/og`
+* **Parameter:** `?date=YYYY-MM-DD` (Optional)
+* **Example:** [https://indonesia-holiday-api.vercel.app/api/og](https://indonesia-holiday-api.vercel.app/api/og)
+* **Behavior:** Renders a 1200x630 red-and-gold card if it's a holiday, or a dark-themed card if it's a regular workday.
+
+### 2. 🧠 Wikipedia AI Data Enrichment
+Instead of just getting brief names, pull comprehensive historical backgrounds and explanations scraped natively from Wikipedia (cached aggressively via Upstash Redis for latency protection).
+* **Endpoint:** `GET /api/info`
+* **Parameters:** `?search={query}&lang={id/en}`
+* **Example:**
+  ```http
+  GET /api/info?search=Nyepi&lang=id
+  ```
+  ```json
+  {
+    "search": "Nyepi",
+    "info": "Nyepi adalah hari raya suci umat Hindu yang dirayakan setiap Tahun Baru Saka..."
+  }
+  ```
+
+### 3. 🔔 Real-time Webhooks (Push Architecture)
+Stop polling! Register your Slackbot, Discord bot, or server and let the API notify *you* automatically.
+* **Subscribe to Webhook:**
+  ```http
+  POST /api/webhooks/subscribe
+  Content-Type: application/json
+
+  { "webhook_url": "https://your-domain.com/webhook" }
+  ```
+* **How it works:** When someone/a cron job hits `POST /api/webhooks/trigger`, the system verifies if *tomorrow* is a holiday. If yes, it broadcasts the payload concurrently to all subscribed URLs.
+
+### 4. 🎛️ Interactive Visual Dashboard
+The root endpoint `GET /` hosts a gorgeous, reactive dashboard completely written in **TailwindCSS** + **Alpine.js** without any frontend build steps.
+* Visit the root URL to view holidays instantly.
+* Click any holiday row to view a clean popup modal resolving detailed data fetched strictly on the fly via the Wikipedia Enrichment Engine.
+
+
+## 💎 Enterprise & Advanced Features
+
+This API comes packed with advanced tooling designed for bots, CI/CD operations, and modern frontend ecosystems.
+
+### 1. 🖼️ Dynamic Open Graph (SVG) Generator
+Dynamically generate beautiful SVG images on the fly depending on today's holiday context. Useful for Slack, Discord, Twitter, or WhatsApp rich link previews.
+* **Endpoint:** `GET /api/og`
+* **Parameter:** `?date=YYYY-MM-DD` (Optional)
+* **Example:** [https://indonesia-holiday-api.vercel.app/api/og](https://indonesia-holiday-api.vercel.app/api/og)
+* **Behavior:** Renders a 1200x630 red-and-gold card if it's a holiday, or a dark-themed card if it's a regular workday.
+
+### 2. 🧠 Wikipedia AI Data Enrichment
+Instead of just getting brief names, pull comprehensive historical backgrounds and explanations scraped natively from Wikipedia (cached aggressively via Upstash Redis for latency protection).
+* **Endpoint:** `GET /api/info`
+* **Parameters:** `?search={query}&lang={id/en}`
+* **Example:**
+  ```http
+  GET /api/info?search=Nyepi&lang=id
+  ```
+  ```json
+  {
+    "search": "Nyepi",
+    "info": "Nyepi adalah hari raya suci umat Hindu yang dirayakan setiap Tahun Baru Saka..."
+  }
+  ```
+
+### 3. 🔔 Real-time Webhooks (Push Architecture)
+Stop polling! Register your Slackbot, Discord bot, or server and let the API notify *you* automatically.
+* **Subscribe to Webhook:**
+  ```http
+  POST /api/webhooks/subscribe
+  Content-Type: application/json
+
+  { "webhook_url": "https://your-domain.com/webhook" }
+  ```
+* **How it works:** When someone/a cron job hits `POST /api/webhooks/trigger`, the system verifies if *tomorrow* is a holiday. If yes, it broadcasts the payload concurrently to all subscribed URLs.
+
+### 4. 🎛️ Interactive Visual Dashboard
+The root endpoint `GET /` hosts a gorgeous, reactive dashboard completely written in **TailwindCSS** + **Alpine.js** without any frontend build steps.
+* Visit the root URL to view holidays instantly.
+* Click any holiday row to view a clean popup modal resolving detailed data fetched strictly on the fly via the Wikipedia Enrichment Engine.
+
+
 ## 🕸️ GraphQL API
 
 If you want to prevent overfetching, leverage our fully typed GraphQL implementation powered by **GraphQL Yoga**.
