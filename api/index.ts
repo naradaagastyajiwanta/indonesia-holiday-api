@@ -168,10 +168,45 @@ async function getHolidays(): Promise<Holiday[]> {
   }
 }
 
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "s-maxage=86400, stale-while-revalidate");
+  next();
+});
+
+function processHolidays(req: express.Request, res: express.Response, holidays: Holiday[]) {
+  let result = holidays;
+  
+  // 1. Filter by Date Range (start and end)
+  if (req.query.start || req.query.end) {
+    const startDate = req.query.start ? String(req.query.start) : "0000-00-00";
+    const endDate = req.query.end ? String(req.query.end) : "9999-12-31";
+    result = result.filter(h => h.holiday_date >= startDate && h.holiday_date <= endDate);
+  }
+
+  // 2. Filter by search keyword
+  if (req.query.search) {
+    const keyword = String(req.query.search).toLowerCase();
+    result = result.filter(h => h.holiday_name.toLowerCase().includes(keyword));
+  }
+
+  // 3. Format as CSV if requested
+  if (req.query.format === 'csv') {
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="holidays.csv"');
+    const header = "holiday_date,holiday_name,is_national_holiday,is_joint_holiday";
+    const rows = result.map(h => 
+      `${h.holiday_date},"${h.holiday_name.replace(/"/g, '""')}",${h.is_national_holiday},${h.is_joint_holiday}`
+    );
+    return res.send([header, ...rows].join('\n'));
+  }
+
+  return res.json(result);
+}
+
 app.get("/api", async (req, res) => {
   try {
     const holidays = await getHolidays();
-    res.json(holidays);
+    processHolidays(req, res, holidays);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch holidays" });
   }
@@ -182,7 +217,7 @@ app.get("/api/:year", async (req, res) => {
     const year = req.params.year;
     const holidays = await getHolidays();
     const filtered = holidays.filter(h => h.holiday_date.startsWith(year));
-    res.json(filtered);
+    processHolidays(req, res, filtered);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch holidays" });
   }
@@ -194,7 +229,7 @@ app.get("/api/:year/:month", async (req, res) => {
     const month = req.params.month.padStart(2, '0');
     const holidays = await getHolidays();
     const filtered = holidays.filter(h => h.holiday_date.startsWith(`${year}-${month}`));
-    res.json(filtered);
+    processHolidays(req, res, filtered);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch holidays" });
   }
