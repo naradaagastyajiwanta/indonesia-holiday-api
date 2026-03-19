@@ -1,0 +1,79 @@
+  app.get("/api", async (req, res) => {
+    try {
+      const holidays = await getHolidays();
+      processHolidays(req, res, holidays);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch holidays" });
+    }
+  });
+
+  // --- NEW FEATURES: Data Enrichment & Images & Webhooks --- //
+  app.get("/api/info", async (req, res) => {
+    try {
+      const query = typeof req.query.search === 'string' ? req.query.search : "Hari Libur Nasional Indonesia";
+      const lang = typeof req.query.lang === 'string' ? req.query.lang : "id";
+      
+      const cacheKey = \wiki_\_\\;
+      let info = null;
+      if (redis) info = await redis.get<string>(cacheKey);
+      if (!info) {
+         info = await getWikipediaSummary(query, lang);
+         if (info && redis) await redis.set(cacheKey, info, { ex: 60 * 60 * 24 * 7 });
+      }
+      res.json({ search: query, info: info || "Tidak ada informasi detail yang ditemukan." });
+    } catch {
+      res.status(500).json({ error: "Failed to fetch info" });
+    }
+  });
+
+  app.get("/api/og", async (req, res) => {
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jakarta" })).toISOString().split("T")[0];
+    const requestedDate = typeof req.query.date === 'string' ? req.query.date : today;
+    const holidays = await getHolidays();
+    const h = holidays.find(hol => hol.holiday_date === requestedDate);
+    
+    const title = h ? "SELAMAT HARI LIBUR" : "HARI KERJA BIASA";
+    const subtitle = h ? h.holiday_name.toUpperCase() : "Tetap Semangat & Produktif!";
+    const bgColor = h ? "url(#grad)" : "#1F2937";
+    const bgGrad = h ? \<linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" /><stop offset="100%" style="stop-color:#991b1b;stop-opacity:1" /></linearGradient>\ : '';
+
+    const svg = \<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg"><defs>\<style>.title { font: 700 75px sans-serif; fill: white; text-anchor: middle; } .subtitle { font: 500 45px sans-serif; fill: #ffd700; text-anchor: middle; } .date { font: 400 35px sans-serif; fill: #e5e7eb; text-anchor: middle; }</style></defs><rect width="1200" height="630" fill="\" /><text x="600" y="280" class="title">\</text><text x="600" y="360" class="subtitle">\</text><text x="600" y="440" class="date">\</text><text x="600" y="580" style="font: 30px sans-serif; fill: #9ca3af; text-anchor: middle;">indonesia-holiday-api.vercel.app</text></svg>\;
+
+    res.setHeader("Content-Type", "image/svg+xml");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(svg);
+  });
+
+  app.post("/api/webhooks/subscribe", async (req, res) => {
+    if (!redis) return res.status(500).json({ error: "Storage not configured." });
+    const { webhook_url } = req.body;
+    if (!webhook_url || !webhook_url.startsWith("http")) return res.status(400).json({ error: "Invalid webhook_url" });
+    try {
+      const current = await redis.get<string[]>("webhooks") || [];
+      if (!current.includes(webhook_url)) {
+        current.push(webhook_url);
+        await redis.set("webhooks", current);
+      }
+      res.json({ message: "Successfully subscribed!", url: webhook_url });
+    } catch(e) { res.status(500).json({ error: "Failed to save webhook" }); }
+  });
+
+  app.post("/api/webhooks/trigger", async (req, res) => {
+     if (!redis) return res.status(500).json({ error: "Storage not configured." });
+     try {
+        const tomorrowRaw = new Date(); tomorrowRaw.setDate(tomorrowRaw.getDate() + 1);
+        const tomorrow = new Date(tomorrowRaw.toLocaleString("en-US", { timeZone: "Asia/Jakarta" })).toISOString().split("T")[0];
+        const holidays = await getHolidays();
+        const tomorrowHoliday = holidays.find(h => h.holiday_date === tomorrow);
+        if (tomorrowHoliday) {
+            const subscribers = await redis.get<string[]>("webhooks") || [];
+            let sent = 0;
+            await Promise.all(subscribers.map(url => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event: 'upcoming_holiday', data: tomorrowHoliday }) }).then(() => sent++).catch(() => {})));
+            res.json({ message: "Trigger executed", holiday: tomorrowHoliday, notified: sent });
+        } else {
+            res.json({ message: "No holiday tomorrow. Nothing triggered." });
+        }
+     } catch (e) { res.status(500).json({ error: "Failed to trigger webhooks" }); }
+  });
+
+  app.get("/api/:year", async (req, res) => {

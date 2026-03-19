@@ -8,6 +8,28 @@ import { createSchema, createYoga } from "graphql-yoga";
 import { Redis } from "@upstash/redis";
 
 const app = express();
+app.use(express.json()); // Allow parsing JSON for webhooks
+
+// --- NEW FEATURES: Wikipedia Helper --- //
+async function getWikipediaSummary(query: string, lang = "id"): Promise<string | null> {
+  try {
+    const wikiDomain = lang === "en" ? "en" : "id";
+    const searchUrl = `https://${wikiDomain}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json`;
+    const searchRaw = await fetch(searchUrl);
+    const searchJson = await searchRaw.json();
+    if (searchJson.query.search.length > 0) {
+      const title = searchJson.query.search[0].title;
+      const summaryUrl = `https://${wikiDomain}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+      const summaryRaw = await fetch(summaryUrl);
+      const summaryJson = await summaryRaw.json();
+      return summaryJson.extract || null;
+    }
+    return null;
+  } catch(e) {
+    return null;
+  }
+}
+
 
 app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false })); // allow swagger inline scripts if needed
@@ -597,3 +619,5 @@ const yoga = createYoga({
 app.use('/graphql', yoga);
 
 export default app;
+
+
