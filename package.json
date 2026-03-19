@@ -6,10 +6,16 @@
   "scripts": {
     "dev": "vercel dev"
   },
-  "keywords": ["api", "indonesia", "libur", "holiday"],
+  "keywords": [
+    "api",
+    "indonesia",
+    "libur",
+    "holiday"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@hono/node-server": "^1.19.11",
     "hono": "^4.0.0",
     "node-ical": "^0.18.0"
   },
