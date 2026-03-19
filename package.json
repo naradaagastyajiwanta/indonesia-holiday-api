@@ -17,15 +17,13 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "ical": "^0.8.0",
-    "swagger-ui-express": "^5.0.1"
+    "ical": "^0.8.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/ical": "^0.8.3",
     "@types/node": "^20.0.0",
-    "@types/swagger-ui-express": "^4.1.8",
     "typescript": "^5.0.0",
     "vercel": "^33.0.0"
   }

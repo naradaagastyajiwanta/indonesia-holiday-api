@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import ical from "ical";
 import https from "https";
-import * as swaggerUi from "swagger-ui-express";
 
 const app = express();
 
@@ -74,8 +73,38 @@ const swaggerDocument = {
   }
 };
 
-// Swagger specific route, setup
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// Swagger specific route, HTML via CDN for serverless compatibility
+app.get("/api-docs", (req, res) => {
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Indonesia Holiday API - Swagger UI</title>
+      <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+      <style>
+        body { margin: 0; padding: 0; }
+        .swagger-ui .topbar { display: none; }
+      </style>
+    </head>
+    <body>
+      <div id="swagger-ui"></div>
+      <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin></script>
+      <script>
+        window.onload = () => {
+          window.ui = SwaggerUIBundle({
+            spec: ${JSON.stringify(swaggerDocument)},
+            dom_id: '#swagger-ui',
+          });
+        };
+      </script>
+    </body>
+    </html>
+  `;
+  res.send(html);
+});
+
 app.use(cors());
 
 // Serve static landing page
