@@ -24,6 +24,9 @@ Most holiday APIs rely on a static database or JSON files that require manual up
 **Live Base URL:**  
 `https://indonesia-holiday-api.vercel.app`
 
+Interactive OpenAPI / Swagger Docs are explicitly available at:  
+👉 **[Swagger UI Docs](https://indonesia-holiday-api.vercel.app/api-docs)**
+
 The response format for all endpoints is a **JSON Array** containing objects with the following structure:
 * `holiday_date` (String, YYYY-MM-DD)
 * `holiday_name` (String)

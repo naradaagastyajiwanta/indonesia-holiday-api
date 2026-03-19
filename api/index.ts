@@ -2,8 +2,80 @@ import express from "express";
 import cors from "cors";
 import ical from "ical";
 import https from "https";
+import * as swaggerUi from "swagger-ui-express";
 
 const app = express();
+
+const swaggerDocument = {
+  openapi: "3.0.0",
+  info: {
+    title: "Indonesia Public Holidays API",
+    description: "API Data Hari Libur Nasional dan Cuti Bersama di Indonesia. Bersumber dari Google Calendar.",
+    version: "1.0.0",
+  },
+  servers: [
+    {
+      url: "https://indonesia-holiday-api.vercel.app/api",
+      description: "Production Server",
+    },
+    {
+      url: "/api",
+      description: "Local/Relative",
+    },
+  ],
+  paths: {
+    "/{year}": {
+      get: {
+        summary: "Get holidays for a specific year",
+        description: "Retrieve list of public holidays and joint holidays in a specific year.",
+        parameters: [
+          { name: "year", in: "path", required: true, schema: { type: "integer" }, example: 2024 },
+          { name: "start", in: "query", description: "Mulai (Start) Range (YYYY-MM-DD)", required: false, schema: { type: "string", format: "date" } },
+          { name: "end", in: "query", description: "Selesai (End) Range (YYYY-MM-DD)", required: false, schema: { type: "string", format: "date" } },
+          { name: "search", in: "query", description: "Pencarian spesifik berdasarkan kata kunci", required: false, schema: { type: "string" } },
+          { name: "format", in: "query", description: "Format response (json atau csv)", required: false, schema: { type: "string", enum: ["json", "csv"], default: "json" } },
+        ],
+        responses: {
+          "200": {
+            description: "Daftar tanggal merah dan cuti bersama",
+            content: {
+              "application/json": {
+                example: [
+                  { date: "2024-01-01", name: "Tahun Baru Masehi", isNationalHoliday: true, isJointHoliday: false }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{year}/{month}": {
+      get: {
+        summary: "Get holidays for a specific month",
+        description: "Retrieve list of holidays in a specific month of a specific year. Format {month} is 01-12.",
+        parameters: [
+          { name: "year", in: "path", required: true, schema: { type: "integer" }, example: 2024 },
+          { name: "month", in: "path", required: true, schema: { type: "string" }, example: "04" },
+        ],
+        responses: {
+          "200": {
+            description: "Daftar tanggal merah dan cuti bersama di bulan tersebut",
+            content: {
+              "application/json": {
+                example: [
+                  { date: "2024-04-10", name: "Hari Raya Idul Fitri", isNationalHoliday: true, isJointHoliday: false }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+};
+
+// Swagger specific route, setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(cors());
 
 // Serve static landing page
@@ -63,6 +135,13 @@ app.get("/", (req, res) => {
                 <a href="/api/2026/04" target="_blank" class="path">/api/2026/04</a>
             </div>
             <span class="desc">By Month</span>
+        </div>
+        <div class="endpoint">
+            <div class="endpoint-left">
+                <span class="method" style="background:#49cc90;">UI</span>
+                <a href="/api-docs" class="path">/api-docs</a>
+            </div>
+            <span class="desc">Swagger Docs</span>
         </div>
     </div>
     

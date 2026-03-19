@@ -1,6 +1,8 @@
 node_modules/
-.vercel
-dist/
-.DS_Store
 .env
-.env.local
+dev.ts
+server.ts
+local-test.ts
+output.txt
+.vercel/
+tsnode.js
