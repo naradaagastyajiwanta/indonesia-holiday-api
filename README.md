@@ -3,7 +3,7 @@
   <p>A free, open-source, blazing-fast, and <b>auto-updating</b> API for National Holidays & Joint Holidays (Cuti Bersama) in Indonesia.</p>
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Framework: Hono](https://img.shields.io/badge/Built%20with-Hono-orange.svg)](https://hono.dev/)
+  [![Framework: Express](https://img.shields.io/badge/Built%20with-Express-green.svg)](https://expressjs.com/)
   [![Deploy: Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black.svg)](https://vercel.com)
 </div>
 
@@ -14,15 +14,15 @@
 Most holiday APIs rely on a static database or JSON files that require manual updates whenever the Indonesian government (SKB 3 Menteri) announces calendar changes. **This API is different**:
 
 1. **🤖 Auto-Pilot (Zero Maintenance)**: It acts as a proxy to the *Google Calendar Public API* specifically for the Indonesian region. When the government changes holidays, Google updates its calendar, and this API **automatically** reflects the changes in *real-time*.
-2. **⚡ Blazing Fast**: Built with the **Hono** framework on Edge / Serverless architecture (Vercel) utilizing a 24-hour in-memory cache. Response times are consistently low (averaging under 50ms).
+2. **⚡ Blazing Fast**: Built with the **Express.js** framework on Edge / Serverless architecture (Vercel) utilizing a 24-hour in-memory cache and native fetch API. Response times are consistently low.
 3. **🔓 100% Free & No API Key Required**: No registration, no tokens needed. Just hit the endpoint directly from your applications!
 
 ---
 
 ## 🚀 Usage (API Endpoints)
 
-**Standard Base URL:** *(Replace with your Vercel/Cloudflare URL if deployed for production)*  
-`https://indonesia-holiday-api.vercel.app` *(Example URL)*
+**Live Base URL:**  
+`https://indonesia-holiday-api.vercel.app`
 
 The response format for all endpoints is a **JSON Array** containing objects with the following structure:
 * `holiday_date` (String, YYYY-MM-DD)
@@ -80,7 +80,7 @@ Below are quick examples of how to consume this API in various programming langu
 
 ```javascript
 // Get holidays for August 2026
-fetch('https://YOUR_DOMAIN.vercel.app/api/2026/08')
+fetch('https://indonesia-holiday-api.vercel.app/api/2026/08')
   .then(response => response.json())
   .then(data => {
     console.log(data);
@@ -98,7 +98,7 @@ fetch('https://YOUR_DOMAIN.vercel.app/api/2026/08')
 ```python
 import requests
 
-url = "https://YOUR_DOMAIN.vercel.app/api/2026"
+url = "https://indonesia-holiday-api.vercel.app/api/2026"
 response = requests.get(url)
 
 if response.status_code == 200:
@@ -114,7 +114,7 @@ if response.status_code == 200:
 ```php
 <?php
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "https://YOUR_DOMAIN.vercel.app/api/2026/12");
+curl_setopt($ch, CURLOPT_URL, "https://indonesia-holiday-api.vercel.app/api/2026/12");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 $output = curl_exec($ch);
 curl_close($ch);
@@ -139,7 +139,7 @@ Want to modify the code or contribute? Node.js `v18+` is highly recommended.
     ```bash
     cd indonesia-holiday-api
     ```
-3.  **Install dependencies (Hono, Node-iCal, TypeScript):**
+3.  **Install dependencies (Express, CORS, iCal, TypeScript):**
     ```bash
     npm install
     ```
