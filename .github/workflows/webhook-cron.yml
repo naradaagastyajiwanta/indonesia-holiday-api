@@ -1,0 +1,16 @@
+name: Daily Webhook Trigger
+
+on:
+  schedule:
+    # Runs at 17:01 UTC every day, which is 00:01 WIB (Waktu Indonesia Barat)
+    - cron: '1 17 * * *'
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions UI
+
+jobs:
+  trigger-webhooks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Webhook Endpoint
+        run: |
+          curl -X POST https://indonesia-holiday-api.vercel.app/api/webhooks/trigger \
+          -H "Content-Type: application/json"
