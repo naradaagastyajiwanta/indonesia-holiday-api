@@ -15,11 +15,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@hono/node-server": "^1.19.11",
-    "hono": "^4.0.0",
-    "node-ical": "^0.18.0"
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "ical": "^0.8.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/ical": "^0.8.3",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0",
     "vercel": "^33.0.0"
