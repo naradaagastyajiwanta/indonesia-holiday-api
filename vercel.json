@@ -1,8 +1,15 @@
 {
-  "rewrites": [
+  "buildCommand": "tsc",
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/api/index.ts"
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.ts"
     }
   ]
 }
