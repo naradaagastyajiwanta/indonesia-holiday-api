@@ -39,7 +39,13 @@ async function getHolidays() {
           const formattedDate = `${yyyy}-${mm}-${dd}`;
           
           // Memisahkan kategori Libur / Cuti Bersama
-          const summary = event.summary as string;
+          let summary = event.summary as any;
+          if (summary && typeof summary !== 'string') {
+            summary = summary.val || String(summary);
+          } else {
+            summary = String(summary || '');
+          }
+
           const isJointHoliday = summary.toLowerCase().includes('cuti bersama');
 
           holidays.push({
